@@ -49,6 +49,19 @@ namespace MercuryHostBoard
             }
         }
 
+        public void DeInit()
+        {
+            try
+            {
+                inst_ABB.ExitEngMod();
+                inst_ABB.USBPort_Close();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
         public double[] ReadRSSI()
         {
 

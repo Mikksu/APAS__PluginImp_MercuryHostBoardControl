@@ -27,7 +27,7 @@ namespace MercuryHostBoard
                 // calculate resp. with the RSSI
                 double mw = Math.Pow(10, Reference_dBm / 10); // convert ref. optical power from dBm to mW.
                 rssi = value / 4096.0 * 2.5 / 6.4 * 32;    // calculate RSSI with the sampling ADC value.
-                Responsibility = Math.Round(rssi / mw, 2);  // calculate resp.
+                Responsibility = rssi / mw;  // calculate resp.
 
                 OnPropertyChanged();
             }

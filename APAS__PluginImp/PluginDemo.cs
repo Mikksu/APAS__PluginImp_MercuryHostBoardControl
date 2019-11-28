@@ -18,6 +18,7 @@ namespace MercuryHostBoard
         readonly string param1 = "";
 
         AAB_HostBoard hostBoard;
+        int rssiMaxChannel = 4;
 
         readonly object hostBoardLock = new object();
 
@@ -25,6 +26,7 @@ namespace MercuryHostBoard
         CancellationToken ct;
 
         double resp_diff = 0;
+
 
         #endregion
 
@@ -36,10 +38,10 @@ namespace MercuryHostBoard
 
             param1 = config.AppSettings.Settings["Param1"].Value;
 
-            TestResult = new DataPerChannel[MaxChannel];
+            TestResult = new DataPerChannel[rssiMaxChannel];
 
             // Set Ref. optical power to default value
-            for (int i = 0; i < MaxChannel; i++)
+            for (int i = 0; i < rssiMaxChannel; i++)
             {
                 TestResult[i] = new DataPerChannel();
 
@@ -62,12 +64,16 @@ namespace MercuryHostBoard
 
         public override string Name => "MercuryHostBoard";
 
-        public override string Usage => "Irixi Mercury Host Board Control App";
+        public override string Usage => 
+            "Irixi Mercury Host板控制程序。\n" +
+            "通道0-3表示1-4通道的响应度。\n" +
+            "通道4表示通道平衡性插值。";
 
         /// <summary>
         /// 最大测量通道。
+        /// <para>通道5表示通道平衡差值。</para>
         /// </summary>
-        public override int MaxChannel => 4;
+        public override int MaxChannel => rssiMaxChannel + 1;
 
         public DataPerChannel[] TestResult { get; }
 
@@ -101,12 +107,24 @@ namespace MercuryHostBoard
         /// <returns></returns>
         public sealed override async Task Control(string param)
         {
+            if (param == "RECONN")
+            {
+                StopBackgroundTask();
+
+                hostBoard.DeInit();
+                Thread.Sleep(200);
+                hostBoard.Init();
+                StartBackgroundTask();
+            }
+
             await Task.CompletedTask;
         }
 
         protected override void Dispose(bool disposing)
         {
             StopBackgroundTask();
+
+            hostBoard.DeInit();
         }
 
         /// <summary>
@@ -126,7 +144,11 @@ namespace MercuryHostBoard
                 }
 
                 FlushTestResult(rssi);
-                return TestResult[Channel].Responsibility;
+
+                if (Channel < rssiMaxChannel)
+                    return TestResult[Channel].Responsibility;
+                else
+                    return this.RespDiff;
             }
             else
                 throw new ArgumentOutOfRangeException("Channel");
@@ -158,7 +180,7 @@ namespace MercuryHostBoard
                 }
 
                 FlushTestResult(rssi);
-                return TestResult[0].Responsibility;
+                return this.RespDiff;
 
             }
             catch(Exception ex)
@@ -170,6 +192,10 @@ namespace MercuryHostBoard
         public override bool Init()
         {
             hostBoard = new AAB_HostBoard();
+
+            // Deinit the host board since it is not connectable if it's not disconnected correctly.
+            hostBoard.DeInit();
+
             hostBoard.Init();
 
             IsInitialized = true;
@@ -226,7 +252,7 @@ namespace MercuryHostBoard
 
         private void FlushTestResult(double[] RSSI)
         {
-            for (int i = 0; i < MaxChannel; i++)
+            for (int i = 0; i < rssiMaxChannel; i++)
             {
                 TestResult[i].RSSI = RSSI[i];
             }
