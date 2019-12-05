@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿
+using System;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace MercuryHostBoard
@@ -16,7 +18,14 @@ namespace MercuryHostBoard
         private async void BtnReconnect_Click(object sender, RoutedEventArgs e)
         {
             var backend = this.DataContext as PluginDemo;
-            await backend.Control("RECONN");
+            try
+            {
+                await backend.Control("RECONN");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"无法连接Host板，{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

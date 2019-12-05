@@ -1,11 +1,9 @@
 ﻿using APAS__PluginContract.ImplementationBase;
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using SystemServiceContract.Core;
 
 namespace MercuryHostBoard
@@ -243,11 +241,14 @@ namespace MercuryHostBoard
 
         public override void StopBackgroundTask()
         {
-            // 结束背景线程
-            cts.Cancel();
+            if (cts != null)
+            {
+                // 结束背景线程
+                cts.Cancel();
 
-            //! 延时，确保背景线程正确退出
-            Thread.Sleep(200);
+                //! 延时，确保背景线程正确退出
+                Thread.Sleep(200);
+            }
         }
 
         private void FlushTestResult(double[] RSSI)
